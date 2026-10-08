@@ -94,5 +94,8 @@ export function visibleText(page: Page, text: string) {
 
 /** 一覧の投稿カード（タイトル見出し）の一覧 */
 export function postTitles(page: Page) {
-  return page.locator(".post-list .post-title").filter({ visible: true });
+  return page
+    .getByRole("list", { name: "記事一覧" })
+    .getByRole("heading")
+    .filter({ visible: true });
 }

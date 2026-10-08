@@ -1,6 +1,7 @@
 "use client";
 
 import { deletePost } from "@/actions/post";
+import Button from "@/components/ui/Button";
 
 export default function DeletePostButton({ postId }: { postId: number }) {
   const handleDelete = async () => {
@@ -10,8 +11,8 @@ export default function DeletePostButton({ postId }: { postId: number }) {
   };
 
   return (
-    <button className="btn-danger" onClick={handleDelete}>
+    <Button variant="danger" onClick={handleDelete}>
       削除
-    </button>
+    </Button>
   );
 }

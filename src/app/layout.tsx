@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import "./globals.css";
-import Header from "./Header";
+import Header from "@/components/Header";
+import HeaderFrame from "@/components/HeaderFrame";
 
 export default function RootLayout({
   children,
@@ -10,37 +11,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <Suspense
-          fallback={
-            <header
-              style={{
-                backgroundColor: "#333",
-                color: "#fff",
-                padding: "15px 0",
-              }}
-            >
-              <div
-                className="container"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <h1>
-                  <span style={{ fontSize: "24px", fontWeight: "bold" }}>
-                    BBS App
-                  </span>
-                </h1>
-              </div>
-            </header>
-          }
-        >
+        <Suspense fallback={<HeaderFrame />}>
           <Header />
         </Suspense>
-        <main className="container" style={{ padding: "40px 20px" }}>
-          {children}
-        </main>
+        <main className="mx-auto max-w-[800px] px-5 py-10">{children}</main>
       </body>
     </html>
   );

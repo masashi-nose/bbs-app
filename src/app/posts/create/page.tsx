@@ -1,6 +1,9 @@
 "use client";
 
 import { createPost } from "@/actions/post";
+import SubmitButton from "@/components/SubmitButton";
+import Card from "@/components/ui/Card";
+import { FieldError, TextAreaField, TextField } from "@/components/ui/TextField";
 import { useState } from "react";
 
 export default function CreatePostPage() {
@@ -15,39 +18,16 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: "600px", marginTop: "30px" }}>
-      <div className="card">
-        <h2 style={{ marginBottom: "20px" }}>新規投稿</h2>
+    <div className="mx-auto mt-8 max-w-[600px]">
+      <Card>
+        <h2 className="mb-5 text-2xl font-bold">新規投稿</h2>
         <form action={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="title">
-              タイトル
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              className="form-input"
-              placeholder="タイトルを入力"
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="content">
-              本文
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              className="form-textarea"
-              placeholder="本文を入力"
-            ></textarea>
-          </div>
-          {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="btn">
-            投稿する
-          </button>
+          <TextField id="title" label="タイトル" type="text" placeholder="タイトルを入力" />
+          <TextAreaField id="content" label="本文" placeholder="本文を入力" />
+          {error && <FieldError className="mb-4">{error}</FieldError>}
+          <SubmitButton label="投稿する" pendingLabel="投稿中…" />
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -152,17 +152,17 @@ describe("アカウント登録画面", () => {
     const rule = (label: string) => rules.getByText(label, { exact: false });
 
     for (const label of ["8〜72文字", "英大文字を含む", "英小文字を含む", "数字を含む"]) {
-      expect(rule(label)).not.toHaveClass("met");
+      expect(rule(label)).not.toHaveAttribute("data-met", "true");
     }
 
     await user.type(screen.getByLabelText("パスワード"), "abc");
-    expect(rule("英小文字を含む")).toHaveClass("met");
-    expect(rule("英大文字を含む")).not.toHaveClass("met");
-    expect(rule("8〜72文字")).not.toHaveClass("met");
+    expect(rule("英小文字を含む")).toHaveAttribute("data-met", "true");
+    expect(rule("英大文字を含む")).not.toHaveAttribute("data-met", "true");
+    expect(rule("8〜72文字")).not.toHaveAttribute("data-met", "true");
 
     await user.type(screen.getByLabelText("パスワード"), "DEF123");
     for (const label of ["8〜72文字", "英大文字を含む", "英小文字を含む", "数字を含む"]) {
-      expect(rule(label)).toHaveClass("met");
+      expect(rule(label)).toHaveAttribute("data-met", "true");
     }
   });
 
@@ -229,7 +229,7 @@ describe("アカウント登録画面", () => {
 
     await fillAndSubmit({ ...validInput, password: "Password123あ" });
 
-    expect(rule).not.toHaveClass("met");
+    expect(rule).not.toHaveAttribute("data-met", "true");
     expect(
       await screen.findByText("パスワードは半角英数字・記号のみで入力してください"),
     ).toBeInTheDocument();
@@ -280,8 +280,8 @@ describe("アカウント登録画面", () => {
     const button = await screen.findByRole("button", { name: "登録中…" });
     expect(button).toBeDisabled();
     // 見た目はローディングマークのみで、処理中のラベルは読み上げ用
-    expect(button.querySelector(".btn-spinner")).toBeInTheDocument();
-    expect(screen.getByText("登録中…")).toHaveClass("visually-hidden");
+    expect(within(button).getByTestId("spinner")).toBeInTheDocument();
+    expect(screen.getByText("登録中…")).toHaveClass("sr-only");
 
     resolve(undefined);
     expect(await screen.findByRole("button", { name: "登録する" })).toBeEnabled();

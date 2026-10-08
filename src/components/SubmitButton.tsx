@@ -1,32 +1,31 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import Button from "./ui/Button";
+import Spinner from "./ui/Spinner";
 
 // 送信中は二重送信を防ぐためにボタンを無効化し、ローディングマークを表示する
 export default function SubmitButton({
   label,
   pendingLabel,
+  fullWidth = false,
 }: {
   label: string;
   pendingLabel: string;
+  fullWidth?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      className="btn"
-      style={{ width: "100%", marginBottom: "15px" }}
-      disabled={pending}
-    >
+    <Button type="submit" fullWidth={fullWidth} disabled={pending}>
       {pending ? (
         <>
-          <span className="btn-spinner" aria-hidden="true" />
+          <Spinner />
           {/* 見た目はスピナーのみ。読み上げ用に処理中のラベルを残す */}
-          <span className="visually-hidden">{pendingLabel}</span>
+          <span className="sr-only">{pendingLabel}</span>
         </>
       ) : (
         label
       )}
-    </button>
+    </Button>
   );
 }

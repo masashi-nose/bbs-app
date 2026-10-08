@@ -8,6 +8,6 @@ test.describe("PostList（投稿 0 件）", () => {
 
     await expect(page.getByRole("heading", { name: "記事一覧" })).toBeVisible();
     await expect(page.getByText("投稿がありません")).toBeVisible();
-    await expect(page.locator(".post-list")).toHaveCount(0);
+    await expect(page.getByRole("list", { name: "記事一覧" })).toHaveCount(0);
   });
 });

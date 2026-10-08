@@ -31,7 +31,8 @@ test.describe("投稿の一連のフロー", () => {
     // 一覧の先頭に表示される（updateTag("posts") によりキャッシュが更新されている）
     await expect(postTitles(page).first()).toHaveText(title);
     const card = page
-      .locator(".card", { has: page.getByRole("link", { name: title }) })
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("link", { name: title }) })
       .filter({ visible: true });
     await expect(card).toContainText(`投稿者: ${user.userName}`);
     await expect(card).toContainText("フローテストの本文です。");

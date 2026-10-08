@@ -8,7 +8,9 @@ import {
   loginSchema,
   validate,
 } from "@/utils/validation";
-import SubmitButton from "@/app/SubmitButton";
+import SubmitButton from "@/components/SubmitButton";
+import Card from "@/components/ui/Card";
+import { FieldError, TextField } from "@/components/ui/TextField";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
@@ -68,75 +70,51 @@ export default function LoginPage() {
   const passwordError = fieldError("password");
 
   return (
-    <div className="container" style={{ maxWidth: "400px", marginTop: "50px" }}>
-      <div className="card">
-        <h2 style={{ marginBottom: "20px", textAlign: "center" }}>ログイン</h2>
+    <div className="mx-auto mt-12 max-w-[400px]">
+      <Card>
+        <h2 className="mb-5 text-center text-2xl font-bold">ログイン</h2>
         <form ref={formRef} action={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">
-              メールアドレス
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className="form-input"
-              placeholder="example@email.com"
-              autoComplete="email"
-              maxLength={EMAIL_MAX_LENGTH}
-              value={values.email}
-              onChange={handleChange("email")}
-              onBlur={handleBlur("email")}
-              aria-invalid={!!emailError}
-              aria-describedby={emailError ? "email-error" : undefined}
-              required
-            />
-            {emailError && (
-              <p id="email-error" className="error-message">
-                {emailError}
-              </p>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              パスワード
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className="form-input"
-              placeholder="********"
-              autoComplete="current-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              value={values.password}
-              onChange={handleChange("password")}
-              onBlur={handleBlur("password")}
-              aria-invalid={!!passwordError}
-              aria-describedby={passwordError ? "password-error" : undefined}
-              required
-            />
-            {passwordError && (
-              <p id="password-error" className="error-message">
-                {passwordError}
-              </p>
-            )}
-          </div>
+          <TextField
+            id="email"
+            label="メールアドレス"
+            type="email"
+            placeholder="example@email.com"
+            autoComplete="email"
+            maxLength={EMAIL_MAX_LENGTH}
+            value={values.email}
+            onChange={handleChange("email")}
+            onBlur={handleBlur("email")}
+            error={emailError}
+            required
+          />
+          <TextField
+            id="password"
+            label="パスワード"
+            type="password"
+            placeholder="********"
+            autoComplete="current-password"
+            maxLength={PASSWORD_MAX_LENGTH}
+            value={values.password}
+            onChange={handleChange("password")}
+            onBlur={handleBlur("password")}
+            error={passwordError}
+            required
+          />
           {error && (
-            <p role="alert" className="error-message">
+            <FieldError role="alert" className="mb-4">
               {error}
-            </p>
+            </FieldError>
           )}
-          <SubmitButton label="ログイン" pendingLabel="ログイン中…" />
+          <SubmitButton label="ログイン" pendingLabel="ログイン中…" fullWidth />
         </form>
-        <p style={{ textAlign: "center", fontSize: "14px" }}>
+        <p className="mt-4 text-center text-sm">
           アカウントをお持ちでないですか？
           <br />
-          <Link href="/signup" style={{ color: "#0070f3" }}>
+          <Link href="/signup" className="text-primary hover:underline">
             新規登録はこちら
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

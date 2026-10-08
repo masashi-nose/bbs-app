@@ -53,4 +53,8 @@ npx playwright test e2e/posts.spec.ts # E2E を1ファイルだけ実行
 - キャッシュされる戻り値は TypeORM のエンティティインスタンスをシリアライズ可能にするため、プレーンオブジェクト（`{ ...post, user: { ...post.user } }`）に変換して返す。
 
 ### スタイリング
-`src/app/globals.css` のグローバルクラス（`container`, `card`, `btn`, `form-*`, `post-*`）とインラインスタイルで構成。CSS フレームワークは未使用。
+Tailwind CSS v4（`postcss.config.mjs` + `src/app/globals.css` の `@import "tailwindcss"`）に統一している。
+- スタイルは Tailwind のユーティリティクラスのみで書く。`style` 属性の直書きは ESLint（`react/forbid-dom-props`）でエラーになる。グローバルな CSS クラスは追加しない。
+- 色・フォントは `globals.css` の `@theme` にトークンとして定義し、`bg-primary` / `text-muted` / `border-border` のように参照する（16進カラーの直書きはしない）。
+- 2箇所以上で使う見た目は `src/components/ui/`（`Button`, `Card`, `Spinner`, `TextField` / `TextAreaField` / `FieldError`）に寄せる。アプリ共通の部品（`Header`, `HeaderFrame`, `Loader`, `SubmitButton`）は `src/components/`。条件付きクラスは `src/utils/cn.ts` で結合する。
+- テストではクラス名に依存せず、role / ラベル / `data-*` 属性（例: パスワード条件の `data-met`、`data-testid="spinner"`）で要素を特定する。

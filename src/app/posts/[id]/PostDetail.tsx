@@ -2,6 +2,7 @@ import { getPost } from "@/actions/post";
 import DeletePostButton from "./DeletePostButton";
 import { notFound } from "next/navigation";
 import { verifySession } from "@/utils/session";
+import Card from "@/components/ui/Card";
 
 export default async function PostDetail({
   params,
@@ -20,27 +21,17 @@ export default async function PostDetail({
 
   return (
     <>
-      <div className="card">
-        <h1 style={{ marginBottom: "15px", fontSize: "24px" }}>{post.title}</h1>
-        <p
-          style={{
-            color: "#666",
-            fontSize: "14px",
-            marginBottom: "20px",
-            borderBottom: "1px solid #eee",
-            paddingBottom: "10px",
-          }}
-        >
+      <Card>
+        <h1 className="mb-4 text-2xl font-bold">{post.title}</h1>
+        <p className="mb-5 border-b border-divider pb-2.5 text-sm text-muted">
           投稿者: {post.user.userName} | 作成日:{" "}
           {new Date(post.createdAt).toLocaleString()}
         </p>
-        <div style={{ lineHeight: "1.8", whiteSpace: "pre-wrap" }}>
-          {post.content}
-        </div>
-      </div>
+        <div className="leading-[1.8] whitespace-pre-wrap">{post.content}</div>
+      </Card>
 
       {isOwner && (
-        <div style={{ marginTop: "20px" }}>
+        <div className="mt-5">
           <DeletePostButton postId={post.id} />
         </div>
       )}

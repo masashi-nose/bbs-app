@@ -10,7 +10,9 @@ import {
   signupSchema,
   validate,
 } from "@/utils/validation";
-import SubmitButton from "@/app/SubmitButton";
+import SubmitButton from "@/components/SubmitButton";
+import Card from "@/components/ui/Card";
+import { FieldError, TextField } from "@/components/ui/TextField";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
@@ -75,113 +77,75 @@ export default function SignupPage() {
   const passwordError = fieldError("password");
 
   return (
-    <div className="container" style={{ maxWidth: "400px", marginTop: "50px" }}>
-      <div className="card">
-        <h2 style={{ marginBottom: "20px", textAlign: "center" }}>
-          アカウント登録
-        </h2>
+    <div className="mx-auto mt-12 max-w-[400px]">
+      <Card>
+        <h2 className="mb-5 text-center text-2xl font-bold">アカウント登録</h2>
         <form ref={formRef} action={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="username">
-              ユーザー名
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              className="form-input"
-              placeholder={`ユーザー名（${USERNAME_MAX_LENGTH}文字以内）`}
-              autoComplete="username"
-              maxLength={USERNAME_MAX_LENGTH}
-              value={values.username}
-              onChange={handleChange("username")}
-              onBlur={handleBlur("username")}
-              aria-invalid={!!usernameError}
-              aria-describedby={usernameError ? "username-error" : undefined}
-              required
-            />
-            {usernameError && (
-              <p id="username-error" className="error-message">
-                {usernameError}
-              </p>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">
-              メールアドレス
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className="form-input"
-              placeholder="example@email.com"
-              autoComplete="email"
-              maxLength={EMAIL_MAX_LENGTH}
-              value={values.email}
-              onChange={handleChange("email")}
-              onBlur={handleBlur("email")}
-              aria-invalid={!!emailError}
-              aria-describedby={emailError ? "email-error" : undefined}
-              required
-            />
-            {emailError && (
-              <p id="email-error" className="error-message">
-                {emailError}
-              </p>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              パスワード
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className="form-input"
-              placeholder="********"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              value={values.password}
-              onChange={handleChange("password")}
-              onBlur={handleBlur("password")}
-              aria-invalid={!!passwordError}
-              aria-describedby={
-                passwordError ? "password-error password-rules" : "password-rules"
-              }
-              required
-            />
-            {passwordError && (
-              <p id="password-error" className="error-message">
-                {passwordError}
-              </p>
-            )}
-            <ul id="password-rules" className="password-rules" aria-label="必要な条件">
+          <TextField
+            id="username"
+            label="ユーザー名"
+            type="text"
+            placeholder={`ユーザー名（${USERNAME_MAX_LENGTH}文字以内）`}
+            autoComplete="username"
+            maxLength={USERNAME_MAX_LENGTH}
+            value={values.username}
+            onChange={handleChange("username")}
+            onBlur={handleBlur("username")}
+            error={usernameError}
+            required
+          />
+          <TextField
+            id="email"
+            label="メールアドレス"
+            type="email"
+            placeholder="example@email.com"
+            autoComplete="email"
+            maxLength={EMAIL_MAX_LENGTH}
+            value={values.email}
+            onChange={handleChange("email")}
+            onBlur={handleBlur("email")}
+            error={emailError}
+            required
+          />
+          <TextField
+            id="password"
+            label="パスワード"
+            type="password"
+            placeholder="********"
+            autoComplete="new-password"
+            maxLength={PASSWORD_MAX_LENGTH}
+            value={values.password}
+            onChange={handleChange("password")}
+            onBlur={handleBlur("password")}
+            error={passwordError}
+            describedBy="password-rules"
+            required
+          >
+            <ul id="password-rules" className="mt-2 text-[13px] text-muted" aria-label="必要な条件">
               {PASSWORD_RULES.map((rule) => {
                 const met = values.password.length > 0 && rule.test(values.password);
                 return (
-                  <li key={rule.key} className={met ? "met" : undefined}>
+                  <li key={rule.key} data-met={met} className="data-[met=true]:text-success">
                     {met ? "✓" : "・"} {rule.label}
                   </li>
                 );
               })}
             </ul>
-          </div>
+          </TextField>
           {error && (
-            <p role="alert" className="error-message">
+            <FieldError role="alert" className="mb-4">
               {error}
-            </p>
+            </FieldError>
           )}
-          <SubmitButton label="登録する" pendingLabel="登録中…" />
+          <SubmitButton label="登録する" pendingLabel="登録中…" fullWidth />
         </form>
-        <p style={{ textAlign: "center", fontSize: "14px" }}>
+        <p className="mt-4 text-center text-sm">
           すでにアカウントをお持ちですか？ <br />
-          <Link href="/login" style={{ color: "#0070f3" }}>
+          <Link href="/login" className="text-primary hover:underline">
             ログインはこちら
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

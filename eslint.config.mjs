@@ -5,6 +5,12 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      // スタイルは Tailwind のユーティリティクラスで書く（style 属性の直書きは禁止）
+      "react/forbid-dom-props": ["error", { forbid: ["style"] }],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

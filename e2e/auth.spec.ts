@@ -67,9 +67,9 @@ test.describe("新規登録のバリデーション", () => {
     await page.getByLabel("パスワード").fill("password");
 
     const rules = page.getByRole("list", { name: "必要な条件" });
-    await expect(rules.getByText("英小文字を含む")).toHaveClass("met");
-    await expect(rules.getByText("英大文字を含む")).not.toHaveClass("met");
-    await expect(rules.getByText("数字を含む")).not.toHaveClass("met");
+    await expect(rules.getByText("英小文字を含む")).toHaveAttribute("data-met", "true");
+    await expect(rules.getByText("英大文字を含む")).not.toHaveAttribute("data-met", "true");
+    await expect(rules.getByText("数字を含む")).not.toHaveAttribute("data-met", "true");
 
     await page.getByRole("button", { name: "登録する" }).click();
 

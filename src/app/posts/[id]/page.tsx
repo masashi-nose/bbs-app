@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PostDetail from "./PostDetail";
 import { Suspense } from "react";
-import Loader from "@/app/Loader";
+import Loader from "@/components/Loader";
 
 export default function PostDetailPage({
   params,
@@ -9,15 +9,8 @@ export default function PostDetailPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <div className="container" style={{ maxWidth: "800px", marginTop: "30px" }}>
-      <Link
-        href="/"
-        style={{
-          display: "inline-block",
-          marginBottom: "20px",
-          color: "#0070f3",
-        }}
-      >
+    <div className="mt-8">
+      <Link href="/" className="mb-5 inline-block text-primary hover:underline">
         &larr; 一覧に戻る
       </Link>
 
