@@ -41,3 +41,10 @@ yarn-error.log*
 next-env.d.ts
 
 database.sqlite
+
+# e2e (Playwright)
+e2e.sqlite*
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

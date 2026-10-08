@@ -14,6 +14,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // テストのカバレッジ出力
     "coverage/**",
+    // Playwright の出力
+    "test-results/**",
+    "playwright-report/**",
+    "blob-report/**",
+    "playwright/.cache/**",
   ]),
 ]);
 

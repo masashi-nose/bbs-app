@@ -23,7 +23,8 @@ const appDataSource = new DataSource(
       }
     : {
         type: 'sqlite',
-        database: path.join(process.cwd(), 'database.sqlite'),
+        // E2E テストなどで別の DB ファイルを使えるよう、SQLITE_PATH で上書き可能にする
+        database: path.join(process.cwd(), process.env.SQLITE_PATH ?? 'database.sqlite'),
         synchronize: false,
         logging: true,
         entities: [User, Post],

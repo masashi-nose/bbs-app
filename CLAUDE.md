@@ -18,7 +18,19 @@ npm run migration:generate -- src/migrations/<Name> -d src/utils/data-source.ts
 npm run migration:run -- -d src/utils/data-source.ts
 ```
 
-テストは存在しない。
+```bash
+npm test                              # 単体テスト（Vitest + React Testing Library）
+npx vitest run src/actions/post.test.ts  # 単体テストを1ファイルだけ実行
+npm run test:coverage                 # カバレッジ付き
+npm run test:e2e                      # E2E（Playwright）
+npx playwright test e2e/posts.spec.ts # E2E を1ファイルだけ実行
+```
+
+- `database.sqlite` は git 管理外。初回は `npm run migration:run -- -d src/utils/data-source.ts` でローカル DB を作成する。
+- SQLite のパスは環境変数 `SQLITE_PATH` で上書きできる（未設定時は `database.sqlite`）。
+- 単体テストは対象と同階層の `*.test.ts(x)`。async Server Component と `src/proxy.ts` は単体テスト対象外で、E2E（`e2e/*.spec.ts`）で検証する。
+- E2E は `e2e/reset-db.mjs` で専用の `e2e.sqlite` を作り直し、`next build && next start -p 3100` で起動したサーバーに対して実行する（開発用 DB・ポート 3000 の dev サーバーには触れない）。実行のたびに `.next` の本番ビルド出力は上書きされる。
+- `cacheComponents` により、直前のページが非表示のまま DOM に残るため、E2E では表示中の要素に絞って検索する（`e2e/helpers.ts` の `visibleText`）。
 
 ## アーキテクチャ
 
