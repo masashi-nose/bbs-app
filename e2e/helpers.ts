@@ -12,10 +12,12 @@ let counter = 0;
 export function uniqueUser(prefix = "user"): TestUser {
   counter += 1;
   const id = `${Date.now()}-${process.pid}-${counter}`;
+  // ユーザー名は20文字以内の制限があるため、36進数で短くした ID を使う
+  const shortId = `${Date.now().toString(36).slice(-6)}${process.pid.toString(36)}${counter.toString(36)}`;
   return {
-    userName: `${prefix}-${id}`,
+    userName: `${prefix.slice(0, 4)}-${shortId}`.slice(0, 18),
     email: `${prefix}-${id}@example.com`,
-    password: "password123",
+    password: "Password123",
   };
 }
 

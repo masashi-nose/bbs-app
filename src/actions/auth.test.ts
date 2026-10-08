@@ -43,6 +43,7 @@ vi.mock("bcryptjs", () => ({
 
 import { login, logout, signup } from "./auth";
 import { User } from "@/entities/User";
+import { QueryFailedError } from "typeorm";
 
 const { repository, RedirectError } = mocks;
 
@@ -64,17 +65,17 @@ describe("signup（ユーザー登録）", () => {
   const validInput = {
     username: "taro",
     email: "taro@example.com",
-    password: "password123",
+    password: "Password123",
   };
 
   it.each([
-    ["ユーザー名", { ...validInput, username: "" }],
-    ["メールアドレス", { ...validInput, email: "" }],
-    ["パスワード", { ...validInput, password: "" }],
-  ])("%sが空の場合はエラーを返し、DB にアクセスしない", async (_label, input) => {
+    ["ユーザー名", { ...validInput, username: "" }, { username: ["ユーザー名を入力してください"] }],
+    ["メールアドレス", { ...validInput, email: "" }, { email: ["メールアドレスを入力してください"] }],
+    ["パスワード", { ...validInput, password: "" }, { password: ["パスワードを入力してください"] }],
+  ])("%sが空の場合は項目ごとのエラーを返し、DB にアクセスしない", async (_label, input, fieldErrors) => {
     const result = await signup(buildFormData(input));
 
-    expect(result).toEqual({ error: "すべてのフィールドを入力してください。" });
+    expect(result).toEqual({ fieldErrors });
     expect(mocks.getRepository).not.toHaveBeenCalled();
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
@@ -82,8 +83,47 @@ describe("signup（ユーザー登録）", () => {
   it("フィールド自体が送信されていない場合もエラーを返す", async () => {
     const result = await signup(new FormData());
 
-    expect(result).toEqual({ error: "すべてのフィールドを入力してください。" });
+    expect(result).toEqual({
+      fieldErrors: {
+        username: ["ユーザー名を入力してください"],
+        email: ["メールアドレスを入力してください"],
+        password: ["パスワードを入力してください"],
+      },
+    });
     expect(mocks.getRepository).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["ユーザー名が21文字", { ...validInput, username: "a".repeat(21) }, "username"],
+    ["メールアドレスの形式が不正", { ...validInput, email: "invalid-email" }, "email"],
+    ["パスワードが7文字", { ...validInput, password: "Passwo1" }, "password"],
+    ["パスワードに英大文字がない", { ...validInput, password: "password123" }, "password"],
+    ["パスワードに数字がない", { ...validInput, password: "Passwordabc" }, "password"],
+  ])("%sの場合はエラーを返し、DB にアクセスしない", async (_label, input, field) => {
+    const result = await signup(buildFormData(input));
+
+    expect(result?.error).toBeUndefined();
+    expect(Object.keys(result?.fieldErrors ?? {})).toEqual([field]);
+    expect(mocks.getRepository).not.toHaveBeenCalled();
+    expect(mocks.hash).not.toHaveBeenCalled();
+  });
+
+  it("ユーザー名の前後の空白を除去し、メールアドレスを小文字化して保存する", async () => {
+    repository.findOneBy.mockResolvedValue(null);
+    mocks.hash.mockResolvedValue("hashed-password");
+    repository.create.mockImplementation((data) => data);
+    repository.save.mockResolvedValue({ id: 1 });
+
+    await expect(
+      signup(buildFormData({ ...validInput, username: "  taro ", email: " Taro@Example.com " })),
+    ).rejects.toBeInstanceOf(RedirectError);
+
+    expect(repository.findOneBy).toHaveBeenCalledWith({ email: "taro@example.com" });
+    expect(repository.create).toHaveBeenCalledWith({
+      userName: "taro",
+      email: "taro@example.com",
+      password: "hashed-password",
+    });
   });
 
   it("メールアドレスが既に使われている場合はエラーを返し、ユーザーを保存しない", async () => {
@@ -91,7 +131,9 @@ describe("signup（ユーザー登録）", () => {
 
     const result = await signup(buildFormData(validInput));
 
-    expect(result).toEqual({ error: "このメールアドレスは既に使用されています" });
+    expect(result).toEqual({
+      fieldErrors: { email: ["このメールアドレスは既に使用されています"] },
+    });
     expect(repository.findOneBy).toHaveBeenCalledWith({ email: validInput.email });
     expect(mocks.hash).not.toHaveBeenCalled();
     expect(repository.save).not.toHaveBeenCalled();
@@ -109,7 +151,7 @@ describe("signup（ユーザー登録）", () => {
     await expect(signup(buildFormData(validInput))).rejects.toBeInstanceOf(RedirectError);
 
     expect(mocks.getRepository).toHaveBeenCalledWith(User);
-    expect(mocks.hash).toHaveBeenCalledWith("password123", 10);
+    expect(mocks.hash).toHaveBeenCalledWith("Password123", 10);
     expect(repository.create).toHaveBeenCalledWith({
       userName: "taro",
       email: "taro@example.com",
@@ -146,6 +188,39 @@ describe("signup（ユーザー登録）", () => {
     expect(console.error).toHaveBeenCalled();
   });
 
+  it.each([
+    ["Postgres", "23505"],
+    ["SQLite", "SQLITE_CONSTRAINT"],
+  ])("同時登録で一意制約違反（%s）になった場合はメールアドレス重複のエラーを返す", async (_db, code) => {
+    repository.findOneBy.mockResolvedValue(null);
+    mocks.hash.mockResolvedValue("hashed-password");
+    repository.create.mockReturnValue({});
+    repository.save.mockRejectedValue(
+      new QueryFailedError("INSERT", [], Object.assign(new Error("duplicate"), { code })),
+    );
+
+    const result = await signup(buildFormData(validInput));
+
+    expect(result).toEqual({
+      fieldErrors: { email: ["このメールアドレスは既に使用されています"] },
+    });
+    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("一意制約以外のクエリエラーは汎用エラーを返す", async () => {
+    repository.findOneBy.mockResolvedValue(null);
+    mocks.hash.mockResolvedValue("hashed-password");
+    repository.create.mockReturnValue({});
+    repository.save.mockRejectedValue(
+      new QueryFailedError("INSERT", [], Object.assign(new Error("other"), { code: "42P01" })),
+    );
+
+    const result = await signup(buildFormData(validInput));
+
+    expect(result).toEqual({ error: "ユーザー登録中にエラーが発生しました" });
+  });
+
   it("DB 接続に失敗した場合はエラーを返す", async () => {
     mocks.getRepository.mockRejectedValue(new Error("connection failed"));
 
@@ -172,6 +247,51 @@ describe("signup（ユーザー登録）", () => {
 describe("login（ログイン）", () => {
   const validInput = { email: "taro@example.com", password: "password123" };
   const storedUser = { id: 7, email: validInput.email, password: "hashed-password" };
+
+  it("入力が不正な場合は項目ごとのエラーを返し、DB にアクセスしない", async () => {
+    const result = await login(buildFormData({ email: "invalid-email", password: "" }));
+
+    expect(result).toEqual({
+      fieldErrors: {
+        email: ["メールアドレスの形式が正しくありません"],
+        password: ["パスワードを入力してください"],
+      },
+    });
+    expect(mocks.getRepository).not.toHaveBeenCalled();
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it("パスワードポリシーを満たさないパスワードでも照合する（既存ユーザーのため）", async () => {
+    repository.findOneBy.mockResolvedValue(storedUser);
+    mocks.compare.mockResolvedValue(true);
+
+    await expect(
+      login(buildFormData({ email: validInput.email, password: "weak" })),
+    ).rejects.toBeInstanceOf(RedirectError);
+
+    expect(mocks.compare).toHaveBeenCalledWith("weak", "hashed-password");
+  });
+
+  it("パスワードは72文字まで受け付け、73文字はエラーを返す", async () => {
+    repository.findOneBy.mockResolvedValue(null);
+
+    await login(buildFormData({ ...validInput, password: "x".repeat(72) }));
+    expect(repository.findOneBy).toHaveBeenCalled();
+
+    const result = await login(buildFormData({ ...validInput, password: "x".repeat(73) }));
+    expect(result).toEqual({
+      fieldErrors: { password: ["パスワードは72文字以内で入力してください"] },
+    });
+  });
+
+  it("メールアドレスを小文字化してユーザーを検索する", async () => {
+    repository.findOneBy.mockResolvedValue(null);
+
+    const result = await login(buildFormData({ ...validInput, email: " Taro@Example.com" }));
+
+    expect(repository.findOneBy).toHaveBeenCalledWith({ email: "taro@example.com" });
+    expect(result).toEqual({ error: "メールアドレスまたはパスワードが正しくありません" });
+  });
 
   it("該当ユーザーが存在しない場合は汎用エラーを返す", async () => {
     repository.findOneBy.mockResolvedValue(null);

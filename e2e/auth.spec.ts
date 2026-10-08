@@ -44,7 +44,7 @@ test.describe("新規登録", () => {
   test("必須項目が空のときはブラウザのバリデーションで送信されない", async ({ page }) => {
     await page.goto("/signup");
     await page.getByLabel("ユーザー名").fill("no-email");
-    await page.getByLabel("パスワード").fill("password123");
+    await page.getByLabel("パスワード").fill("Password123");
     await page.getByRole("button", { name: "登録する" }).click();
 
     await expect(page).toHaveURL("/signup");
@@ -52,6 +52,48 @@ test.describe("新規登録", () => {
       .getByLabel("メールアドレス")
       .evaluate((el: HTMLInputElement) => el.validity.valid);
     expect(valid).toBe(false);
+  });
+});
+
+test.describe("新規登録のバリデーション", () => {
+  test("パスワードが条件を満たさないとエラーが表示され、送信されずに登録画面に留まる", async ({
+    page,
+    context,
+  }) => {
+    const user = uniqueUser();
+    await page.goto("/signup");
+    await page.getByLabel("ユーザー名").fill(user.userName);
+    await page.getByLabel("メールアドレス").fill(user.email);
+    await page.getByLabel("パスワード").fill("password");
+
+    const rules = page.getByRole("list", { name: "必要な条件" });
+    await expect(rules.getByText("英小文字を含む")).toHaveClass("met");
+    await expect(rules.getByText("英大文字を含む")).not.toHaveClass("met");
+    await expect(rules.getByText("数字を含む")).not.toHaveClass("met");
+
+    await page.getByRole("button", { name: "登録する" }).click();
+
+    await expect(page.getByText("パスワードには英大文字を含めてください")).toBeVisible();
+    await expect(page).toHaveURL("/signup");
+    expect((await context.cookies()).find((c) => c.name === "session")).toBeUndefined();
+  });
+
+  test("ユーザー名は20文字までしか入力できない", async ({ page }) => {
+    await page.goto("/signup");
+    await page.getByLabel("ユーザー名").fill("あ".repeat(21));
+
+    await expect(page.getByLabel("ユーザー名")).toHaveValue("あ".repeat(20));
+  });
+
+  test("メールアドレスは大文字小文字と前後の空白を区別せずに扱われる", async ({ page }) => {
+    const user = uniqueUser("Case");
+    await signup(page, { ...user, email: user.email.toUpperCase() });
+    await logout(page);
+
+    await submitLogin(page, `  ${user.email.toLowerCase()} `, user.password);
+
+    await expect(page).toHaveURL("/");
+    await expect(header(page).getByRole("button", { name: "ログアウト" })).toBeVisible();
   });
 });
 
